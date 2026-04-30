@@ -1,14 +1,29 @@
 import http from "node:http";
-import express from "express";
-import "dotenv/config";
 import path from "node:path";
 
-async function main() {
-  const app = express();
-  const server = http.createServer(app);
+import "dotenv/config";
+import express from "express";
+import { Server } from "socket.io";
 
+async function main() {
   const PORT = process.env.PORT ?? 8000;
 
+  const app = express();
+  const server = http.createServer(app);
+  const io = new Server();
+  io.attach(server);
+
+  // Socket IO Handler
+  io.on("connection", (socket) => {
+    console.log(`Socket connected`, { id: socket.id });
+
+    socket.on("client:checkbox:change", (data) => {
+      console.log(`[Socket:${socket.id}:client:checkbox:change]`, data);
+      io.emit("server:checkbox:change", data);
+    });
+  });
+
+  // Express
   app.use(express.static(path.resolve("./public"))); // if a file is requested and it is present in the public folder you can serve it otherwise not.
   app.get("/health", (req, res) =>
     res.json({
