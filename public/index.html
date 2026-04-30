@@ -190,17 +190,24 @@
         }
       });
 
-      new Array(CHECKBOX_COUNT).fill(null).forEach((_, idx) => {
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.id = `checkbox-${idx}`;
+      window.addEventListener("load", async () => {
+        const reponse = await fetch("/checkboxes", { method: "GET" });
+        const data = await reponse.json();
+        if (data && data.checkboxes) {
+          data.checkboxes.forEach((serverValue, idx) => {
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.id = `checkbox-${idx}`;
+            input.checked = serverValue;
 
-        input.addEventListener("change", (event) => {
-          const checked = event.target.checked;
-          console.log("Checkbox changed", { idx, checked });
-          socket.emit("client:checkbox:change", { idx, checked });
-        });
-        container.appendChild(input);
+            input.addEventListener("change", (event) => {
+              const checked = event.target.checked;
+              console.log("Checkbox changed", { idx, checked });
+              socket.emit("client:checkbox:change", { idx, checked });
+            });
+            container.appendChild(input);
+          });
+        }
       });
     </script>
   </body>
