@@ -5,6 +5,9 @@ import "dotenv/config";
 import express from "express";
 import { Server } from "socket.io";
 
+import { publisher, subscriber } from "./redis-connection.js";
+import { channel } from "node:diagnostics_channel";
+
 const CHECKBOX_SIZE = 1008;
 const state = {
   checkboxes: new Array(CHECKBOX_SIZE).fill(false),
@@ -18,14 +21,25 @@ async function main() {
   const io = new Server();
   io.attach(server);
 
+  await subscriber.subscribe("internal-server:checkbox:change");
+  subscriber.on("message", (channel, message) => {
+    if (channel === "internal-server:checkbox:change") {
+      const { idx, checked } = JSON.parse(message);
+      state.checkboxes[idx] = checked;
+      io.emit("server:checkbox:change", { idx, checked });
+    }
+  });
+
   // Socket IO Handler
   io.on("connection", (socket) => {
     console.log(`Socket connected`, { id: socket.id });
 
     socket.on("client:checkbox:change", (data) => {
       console.log(`[Socket:${socket.id}:client:checkbox:change]`, data);
-      io.emit("server:checkbox:change", data);
-      state.checkboxes[data.idx] = data.checked;
+      publisher.publish(
+        "internal-server:checkbox:change",
+        JSON.stringify(data),
+      );
     });
   });
 
