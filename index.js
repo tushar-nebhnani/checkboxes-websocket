@@ -44,7 +44,7 @@ async function main() {
   });
 
   // Express
-  app.use(express.static(path.resolve("./public"))); // if a file is requested and it is present in the public folder you can serve it otherwise not.
+  app.use(express.static(path.resolve("./public")));
   app.get("/health", (req, res) =>
     res.json({
       healthy: true,
