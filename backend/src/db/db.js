@@ -1,5 +1,6 @@
 import pg from "pg";
 
+import { CHECKBOX_COUNT } from "../constants.js";
 import { ErrorHandler } from "../utils/ErrorHandler.js";
 
 const { Pool } = pg;
@@ -56,6 +57,12 @@ export class Database {
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 
+        CREATE TABLE IF NOT EXISTS checkboxes (
+          idx INTEGER PRIMARY KEY,
+          checked BOOLEAN NOT NULL DEFAULT false,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+
         DO $$
         BEGIN
           IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'password_reset_tokens') THEN
@@ -75,9 +82,22 @@ export class Database {
           END IF;
         END $$;
       `);
+
+      // Backfills any missing idx rows (0..CHECKBOX_COUNT-1) without touching ones
+      // that already exist, so existing progress survives a bump of CHECKBOX_COUNT.
+      await Database.#pool.query(
+        `INSERT INTO checkboxes (idx, checked)
+         SELECT gs, false FROM generate_series(0, $1::int - 1) AS gs
+         ON CONFLICT (idx) DO NOTHING`,
+        [CHECKBOX_COUNT],
+      );
     } catch (err) {
       ErrorHandler.log("Database.ensureSchema", err);
       throw err;
     }
+  }
+
+  static async close() {
+    await Database.#pool.end();
   }
 }

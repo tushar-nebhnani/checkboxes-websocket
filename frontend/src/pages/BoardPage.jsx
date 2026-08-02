@@ -72,6 +72,11 @@ export function BoardPage() {
       flash(idx);
     });
 
+    socket.on("server:checkboxes:reset", () => {
+      setCheckboxes(new Array(TOTAL).fill(false));
+      setFlashed(new Set());
+    });
+
     fetch(`${API_URL}/checkboxes`, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {

@@ -10,12 +10,12 @@ import { Server } from "socket.io";
 import { AuthMiddleware } from "./auth/auth.middleware.js";
 import { AuthRoutes } from "./auth/auth.routes.js";
 import { AuthUtils } from "./auth/auth.utils.js";
+import { CHECKBOX_CHANGE_CHANNEL, CHECKBOX_COUNT, CHECKBOX_RESET_CHANNEL } from "./constants.js";
+import { CheckboxesRepository } from "./db/checkboxes.repository.js";
 import { Database } from "./db/db.js";
 import { RedisConnection } from "./redis-connection.js";
 import { ErrorHandler } from "./utils/ErrorHandler.js";
 
-const CHECKBOX_COUNT = 1008;
-const CHECKBOX_CHANGE_CHANNEL = "internal-server:checkbox:change";
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
 
 const state = { checkboxes: new Array(CHECKBOX_COUNT).fill(false) };
@@ -31,10 +31,16 @@ function isValidCheckboxChange(data) {
 }
 
 async function attachRealtime(io) {
-  await RedisConnection.subscriber.subscribe(CHECKBOX_CHANGE_CHANNEL);
+  await RedisConnection.subscriber.subscribe(CHECKBOX_CHANGE_CHANNEL, CHECKBOX_RESET_CHANNEL);
 
   RedisConnection.subscriber.on("message", (channel, message) => {
     try {
+      if (channel === CHECKBOX_RESET_CHANNEL) {
+        state.checkboxes.fill(false);
+        io.emit("server:checkboxes:reset");
+        return;
+      }
+
       if (channel !== CHECKBOX_CHANGE_CHANNEL) return;
 
       const data = JSON.parse(message);
@@ -44,6 +50,10 @@ async function attachRealtime(io) {
       io.emit("server:checkbox:change", {
         idx: data.idx,
         checked: data.checked,
+      });
+
+      CheckboxesRepository.setChecked(data.idx, data.checked).catch((err) => {
+        console.error("[App] Failed to persist checkbox change:", err);
       });
     } catch (err) {
       console.error("[App] Failed to process checkbox change message:", err);
@@ -108,6 +118,16 @@ async function start() {
     });
     io.attach(server);
 
+    try {
+      await Database.ensureSchema();
+      state.checkboxes = await CheckboxesRepository.loadAll();
+    } catch (err) {
+      console.error(
+        "[db] Failed to ensure schema / load checkboxes — starting with an empty board until DATABASE_URL is configured correctly:",
+        err.message,
+      );
+    }
+
     await attachRealtime(io);
 
     app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -126,15 +146,6 @@ async function start() {
     app.use((err, req, res, next) => {
       ErrorHandler.handleControllerError(err, res, "App.errorMiddleware");
     });
-
-    try {
-      await Database.ensureSchema();
-    } catch (err) {
-      console.error(
-        "[db] Failed to ensure schema — auth routes will not work until DATABASE_URL is configured correctly:",
-        err.message,
-      );
-    }
 
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
