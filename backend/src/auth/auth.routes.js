@@ -30,6 +30,9 @@ export class AuthRoutes {
     );
 
     AuthRoutes.router.get("/health", (req, res) => res.json({ healthy: true }));
+    AuthRoutes.router.get("/", (req, res) =>
+      res.json({ message: "Server is running..." }),
+    );
 
     AuthRoutes.router.post(
       "/refresh",
