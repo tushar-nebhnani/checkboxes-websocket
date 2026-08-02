@@ -8,12 +8,6 @@ import { AuthUtils } from "./auth.utils.js";
 import { TokenService } from "./token.service.js";
 
 const SALT_ROUNDS = 12;
-// A bcrypt hash of a random value, with no corresponding account. Comparing
-// against this when a user isn't found keeps loginUser's response time
-// consistent whether or not the email exists, closing a timing side-channel
-// that would otherwise leak which emails are registered.
-const DUMMY_PASSWORD_HASH =
-  "$2a$12$CwTycUXWue0Thq9StjUM0uJ8i6xVreQyMz9zRO5NRz9NkGCF3sY3.";
 
 export class AuthService {
   static async registerUser(email, password) {
@@ -29,7 +23,9 @@ export class AuthService {
 
       const tokens = await AuthService.#issueTokens(user.id);
 
-      const verificationToken = await TokenService.createEmailVerificationToken(user.id);
+      const verificationToken = await TokenService.createEmailVerificationToken(
+        user.id,
+      );
       try {
         await EmailService.sendVerificationEmail(user.email, verificationToken);
       } catch (err) {
@@ -39,7 +35,11 @@ export class AuthService {
       return { user, ...tokens };
     } catch (err) {
       if (err.code === "23505") {
-        throw new AppError("Email already registered", 409, "EMAIL_ALREADY_REGISTERED");
+        throw new AppError(
+          "Email already registered",
+          409,
+          "EMAIL_ALREADY_REGISTERED",
+        );
       }
       throw ErrorHandler.wrapServiceError(err, "AuthService.registerUser");
     }
@@ -53,9 +53,16 @@ export class AuthService {
       );
       const user = rows[0];
 
-      const valid = await bcrypt.compare(password, user?.password_hash ?? DUMMY_PASSWORD_HASH);
+      const valid = await bcrypt.compare(
+        password,
+        user?.password_hash ?? DUMMY_PASSWORD_HASH,
+      );
       if (!user || !valid) {
-        throw new AppError("Invalid email or password", 401, "INVALID_CREDENTIALS");
+        throw new AppError(
+          "Invalid email or password",
+          401,
+          "INVALID_CREDENTIALS",
+        );
       }
 
       const tokens = await AuthService.#issueTokens(user.id);
@@ -69,7 +76,11 @@ export class AuthService {
     try {
       const rotated = await TokenService.rotateRefreshToken(oldRefreshToken);
       if (!rotated) {
-        throw new AppError("Invalid or expired refresh token", 401, "INVALID_REFRESH_TOKEN");
+        throw new AppError(
+          "Invalid or expired refresh token",
+          401,
+          "INVALID_REFRESH_TOKEN",
+        );
       }
 
       const accessToken = AuthUtils.signAccessToken({ sub: rotated.userId });
@@ -107,9 +118,10 @@ export class AuthService {
 
   static async requestPasswordReset(email) {
     try {
-      const { rows } = await Database.query(`SELECT id, email FROM users WHERE email = $1`, [
-        email,
-      ]);
+      const { rows } = await Database.query(
+        `SELECT id, email FROM users WHERE email = $1`,
+        [email],
+      );
       const user = rows[0];
       if (!user) return; // don't reveal whether the email is registered
 
@@ -120,7 +132,10 @@ export class AuthService {
         ErrorHandler.log("AuthService.requestPasswordReset:sendEmail", err);
       }
     } catch (err) {
-      throw ErrorHandler.wrapServiceError(err, "AuthService.requestPasswordReset");
+      throw ErrorHandler.wrapServiceError(
+        err,
+        "AuthService.requestPasswordReset",
+      );
     }
   }
 
@@ -128,14 +143,18 @@ export class AuthService {
     try {
       const userId = await TokenService.consumePasswordResetToken(token);
       if (!userId) {
-        throw new AppError("Invalid or expired reset token", 400, "INVALID_RESET_TOKEN");
+        throw new AppError(
+          "Invalid or expired reset token",
+          400,
+          "INVALID_RESET_TOKEN",
+        );
       }
 
       const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
-      await Database.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [
-        passwordHash,
-        userId,
-      ]);
+      await Database.query(
+        `UPDATE users SET password_hash = $1 WHERE id = $2`,
+        [passwordHash, userId],
+      );
       await TokenService.revokeAllRefreshTokensForUser(userId);
     } catch (err) {
       throw ErrorHandler.wrapServiceError(err, "AuthService.resetPassword");
@@ -153,9 +172,10 @@ export class AuthService {
         );
       }
 
-      await Database.query(`UPDATE users SET email_verified_at = now() WHERE id = $1`, [
-        userId,
-      ]);
+      await Database.query(
+        `UPDATE users SET email_verified_at = now() WHERE id = $1`,
+        [userId],
+      );
     } catch (err) {
       throw ErrorHandler.wrapServiceError(err, "AuthService.verifyEmail");
     }
@@ -177,13 +197,17 @@ export class AuthService {
         ErrorHandler.log("AuthService.resendVerificationEmail:sendEmail", err);
       }
     } catch (err) {
-      throw ErrorHandler.wrapServiceError(err, "AuthService.resendVerificationEmail");
+      throw ErrorHandler.wrapServiceError(
+        err,
+        "AuthService.resendVerificationEmail",
+      );
     }
   }
 
   static async #issueTokens(userId) {
     const accessToken = AuthUtils.signAccessToken({ sub: userId });
-    const { token: refreshToken } = await TokenService.createRefreshToken(userId);
+    const { token: refreshToken } =
+      await TokenService.createRefreshToken(userId);
     return { accessToken, refreshToken };
   }
 }

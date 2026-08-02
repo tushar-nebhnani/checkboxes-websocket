@@ -5,8 +5,6 @@ const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN ?? "15m";
 const isProduction = process.env.NODE_ENV === "production";
 
 if (!process.env.JWT_SECRET && isProduction) {
-  // A missing secret in production would silently fall back to a guessable
-  // default, letting anyone forge access tokens — fail startup instead.
   throw new Error("JWT_SECRET environment variable must be set in production");
 }
 if (!process.env.JWT_SECRET) {
@@ -27,15 +25,15 @@ export class AuthUtils {
   };
 
   static signAccessToken(payload) {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
+    return jwt.sign(payload, JWT_SECRET, {
+      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
+    });
   }
 
   static verifyAccessToken(token) {
     return jwt.verify(token, JWT_SECRET);
   }
 
-  // Socket.IO handshakes only expose the raw Cookie header, not Express's
-  // parsed req.cookies, so this pulls the access token out by hand.
   static getAccessTokenFromCookieHeader(cookieHeader) {
     if (!cookieHeader) return null;
     const match = cookieHeader.match(

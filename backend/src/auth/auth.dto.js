@@ -1,8 +1,3 @@
-// Explicit allow-lists for every auth API call: request DTOs strip any
-// extra fields a client might send (defense-in-depth against mass
-// assignment even if a route's validation schema is ever loosened), and
-// the response DTO keeps sensitive columns (password_hash, token hashes)
-// from ever reaching the wire.
 export class AuthDTO {
   static toUserResponse(row) {
     return {

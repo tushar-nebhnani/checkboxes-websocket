@@ -16,8 +16,26 @@ export function BoardPage() {
   const [flashed, setFlashed] = useState(() => new Set());
   const [resendState, setResendState] = useState("idle");
   const [verifyBannerDismissed, setVerifyBannerDismissed] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const socketRef = useRef(null);
   const flashTimers = useRef(new Map());
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onPointerDown = (e) => {
+      if (!userMenuRef.current?.contains(e.target)) setUserMenuOpen(false);
+    };
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [userMenuOpen]);
 
   const flash = (idx) => {
     setFlashed((prev) => new Set(prev).add(idx));
@@ -111,20 +129,27 @@ export function BoardPage() {
             </svg>
           </a>
           <span className="board-divider" />
-          <div className="board-live">
-            <span className={`board-live-dot ${connected ? "" : "board-live-dot-off"}`} />
-            <span>{connected ? "Live" : "Reconnecting…"}</span>
-          </div>
-          <span className="board-divider" />
           <ThemeToggle />
           <span className="board-divider" />
-          <div className="board-user">
-            <span className="board-avatar">{initial}</span>
-            <span className="board-user-email">{user?.email}</span>
+          <div className="board-user-menu" ref={userMenuRef}>
+            <button
+              type="button"
+              className="board-avatar-btn"
+              aria-haspopup="true"
+              aria-expanded={userMenuOpen}
+              onClick={() => setUserMenuOpen((open) => !open)}
+            >
+              <span className="board-avatar">{initial}</span>
+            </button>
+            {userMenuOpen && (
+              <div className="board-user-dropdown" role="menu">
+                <span className="board-user-dropdown-email">{user?.email}</span>
+                <button className="board-signout" type="button" onClick={logout}>
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
-          <button className="board-signout" type="button" onClick={logout}>
-            Sign out
-          </button>
         </div>
       </header>
 
@@ -182,7 +207,10 @@ export function BoardPage() {
             <span>
               Field 01 · {COLUMNS} × {TOTAL / COLUMNS}
             </span>
-            <span>{connected ? "Synchronised" : "Reconnecting…"}</span>
+            <span className="board-live">
+              <span className={`board-live-dot ${connected ? "" : "board-live-dot-off"}`} />
+              {connected ? "Synchronised" : "Reconnecting…"}
+            </span>
           </div>
         </div>
       </section>

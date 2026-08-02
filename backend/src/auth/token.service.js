@@ -12,7 +12,8 @@ const EMAIL_VERIFICATION_TTL_MS =
 export class TokenService {
   static async createRefreshToken(userId) {
     try {
-      const { token, tokenHash, expiresAt } = TokenUtils.issue(REFRESH_TOKEN_TTL_MS);
+      const { token, tokenHash, expiresAt } =
+        TokenUtils.issue(REFRESH_TOKEN_TTL_MS);
 
       await Database.query(
         `INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
@@ -21,7 +22,10 @@ export class TokenService {
 
       return { token, expiresAt };
     } catch (err) {
-      throw ErrorHandler.wrapServiceError(err, "TokenService.createRefreshToken");
+      throw ErrorHandler.wrapServiceError(
+        err,
+        "TokenService.createRefreshToken",
+      );
     }
   }
 
@@ -37,23 +41,26 @@ export class TokenService {
       if (!record) return null;
 
       if (record.revoked_at) {
-        // This token was already rotated away once; presenting it again
-        // means it was copied (theft/replay). Contain the blast radius by
-        // killing every session for this user rather than just this token.
         await TokenService.revokeAllRefreshTokensForUser(record.user_id);
         return null;
       }
 
       if (record.expires_at < new Date()) return null;
 
-      await Database.query(`UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1`, [
-        record.id,
-      ]);
+      await Database.query(
+        `UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1`,
+        [record.id],
+      );
 
-      const { token, expiresAt } = await TokenService.createRefreshToken(record.user_id);
+      const { token, expiresAt } = await TokenService.createRefreshToken(
+        record.user_id,
+      );
       return { userId: record.user_id, token, expiresAt };
     } catch (err) {
-      throw ErrorHandler.wrapServiceError(err, "TokenService.rotateRefreshToken");
+      throw ErrorHandler.wrapServiceError(
+        err,
+        "TokenService.rotateRefreshToken",
+      );
     }
   }
 
@@ -65,7 +72,10 @@ export class TokenService {
         [tokenHash],
       );
     } catch (err) {
-      throw ErrorHandler.wrapServiceError(err, "TokenService.revokeRefreshToken");
+      throw ErrorHandler.wrapServiceError(
+        err,
+        "TokenService.revokeRefreshToken",
+      );
     }
   }
 
@@ -76,7 +86,10 @@ export class TokenService {
         [userId],
       );
     } catch (err) {
-      throw ErrorHandler.wrapServiceError(err, "TokenService.revokeAllRefreshTokensForUser");
+      throw ErrorHandler.wrapServiceError(
+        err,
+        "TokenService.revokeAllRefreshTokensForUser",
+      );
     }
   }
 
@@ -114,11 +127,10 @@ export class TokenService {
     });
   }
 
-  // Password-reset and email-verification tokens both boil down to "store a
-  // hash + expiry on a users column, then later look it up and clear it".
-  // hashColumn/expiresColumn are fixed internal identifiers (never
-  // user input), so interpolating them into the query text is safe.
-  static async #issueUserToken(userId, { hashColumn, expiresColumn, ttlMs, context }) {
+  static async #issueUserToken(
+    userId,
+    { hashColumn, expiresColumn, ttlMs, context },
+  ) {
     try {
       const { token, tokenHash, expiresAt } = TokenUtils.issue(ttlMs);
       await Database.query(
@@ -131,7 +143,10 @@ export class TokenService {
     }
   }
 
-  static async #consumeUserToken(token, { hashColumn, expiresColumn, context }) {
+  static async #consumeUserToken(
+    token,
+    { hashColumn, expiresColumn, context },
+  ) {
     try {
       const tokenHash = TokenUtils.hashToken(token);
 
