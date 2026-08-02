@@ -59,6 +59,9 @@ export function BoardPage() {
 
     socket.on("connect", () => setConnected(true));
     socket.on("disconnect", () => setConnected(false));
+    socket.on("connect_error", (err) => {
+      console.error("[socket] connect_error:", err.message);
+    });
 
     socket.on("server:checkbox:change", ({ idx, checked }) => {
       setCheckboxes((prev) => {

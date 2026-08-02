@@ -56,11 +56,15 @@ async function attachRealtime(io) {
         socket.handshake.headers.cookie,
       );
       if (!token) {
+        console.warn(
+          `[Socket:${socket.id}] Rejected — no access_token cookie in handshake. Cookie header present: ${Boolean(socket.handshake.headers.cookie)}`,
+        );
         return next(new Error("Unauthorized"));
       }
       socket.userId = AuthUtils.verifyAccessToken(token).sub;
       next();
-    } catch {
+    } catch (err) {
+      console.warn(`[Socket:${socket.id}] Rejected — ${err.name}: ${err.message}`);
       next(new Error("Unauthorized"));
     }
   });

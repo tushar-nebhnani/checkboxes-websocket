@@ -26,11 +26,14 @@ export class AuthService {
       const verificationToken = await TokenService.createEmailVerificationToken(
         user.id,
       );
-      try {
-        await EmailService.sendVerificationEmail(user.email, verificationToken);
-      } catch (err) {
-        ErrorHandler.log("AuthService.registerUser:sendVerificationEmail", err);
-      }
+      EmailService.sendVerificationEmail(user.email, verificationToken).catch(
+        (err) => {
+          ErrorHandler.log(
+            "AuthService.registerUser:sendVerificationEmail",
+            err,
+          );
+        },
+      );
 
       return { user, ...tokens };
     } catch (err) {
@@ -126,11 +129,9 @@ export class AuthService {
       if (!user) return; // don't reveal whether the email is registered
 
       const token = await TokenService.createPasswordResetToken(user.id);
-      try {
-        await EmailService.sendPasswordResetEmail(user.email, token);
-      } catch (err) {
+      EmailService.sendPasswordResetEmail(user.email, token).catch((err) => {
         ErrorHandler.log("AuthService.requestPasswordReset:sendEmail", err);
-      }
+      });
     } catch (err) {
       throw ErrorHandler.wrapServiceError(
         err,
@@ -191,11 +192,9 @@ export class AuthService {
       if (!user || user.email_verified_at) return; // don't reveal existence; skip if already verified
 
       const token = await TokenService.createEmailVerificationToken(user.id);
-      try {
-        await EmailService.sendVerificationEmail(user.email, token);
-      } catch (err) {
+      EmailService.sendVerificationEmail(user.email, token).catch((err) => {
         ErrorHandler.log("AuthService.resendVerificationEmail:sendEmail", err);
-      }
+      });
     } catch (err) {
       throw ErrorHandler.wrapServiceError(
         err,
