@@ -1,0 +1,49 @@
+.auth-shell {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(900px 620px at 50% -18%, var(--ck-glow-1), transparent 62%),
+    radial-gradient(800px 500px at 12% 108%, var(--ck-glow-2), transparent 60%),
+    var(--ck-ground);
+}
+
+.auth-shell-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--ck-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ck-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+}
+
+.auth-shell-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 452px;
+  padding: 44px 40px 36px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--ck-bd);
+  background: linear-gradient(180deg, var(--ck-glass-1), var(--ck-glass-2));
+  backdrop-filter: blur(var(--ck-blur)) saturate(150%);
+  box-shadow:
+    0 1px 0 var(--ck-inset) inset,
+    var(--ck-drop);
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 34px 24px 28px;
+  }
+}

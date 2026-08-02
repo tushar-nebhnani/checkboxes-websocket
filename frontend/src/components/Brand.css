@@ -1,0 +1,35 @@
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--ck-acc);
+  border-radius: 2px;
+}
+
+.brand-name {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ck-txt);
+}
+
+.brand-md .brand-name {
+  font-size: 12px;
+}
+
+.brand-sm .brand-mark {
+  width: 10px;
+  height: 10px;
+}
+
+.brand-sm .brand-name {
+  font-size: 11px;
+  color: var(--ck-txt-2);
+}

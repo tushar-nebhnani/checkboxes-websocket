@@ -1,0 +1,163 @@
+/* Design tokens ported from the "Classical" design system + the Checkboxes
+   canvas (Checkboxes.dc.html, screens 2a/2b light and 1a/1c dark). */
+
+:root {
+  color-scheme: light dark;
+
+  --font-heading: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Lora", Georgia, serif;
+
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
+
+  --shadow-lg: 0 26px 60px rgba(28, 32, 64, 0.16);
+
+  --ck-accent: #d8556f;
+  --ck-blur: 24px;
+}
+
+/* Light theme (default) — cool paper, iris accent. Ported from screen 2a/2b. */
+:root,
+:root[data-theme="light"] {
+  --ck-page: #eceef4;
+  --ck-ground: #e9ebf2;
+  --ck-glow-1: color-mix(in srgb, var(--ck-accent) 24%, transparent);
+  --ck-glow-2: color-mix(in srgb, var(--ck-accent) 10%, transparent);
+  --ck-line: rgba(20, 24, 45, 0.045);
+  --ck-txt: #13162a;
+  --ck-txt-2: rgba(19, 22, 42, 0.64);
+  --ck-txt-3: rgba(19, 22, 42, 0.5);
+  --ck-txt-4: rgba(19, 22, 42, 0.4);
+  --ck-glass-1: rgba(255, 255, 255, 0.78);
+  --ck-glass-2: rgba(255, 255, 255, 0.44);
+  --ck-bd: rgba(255, 255, 255, 0.85);
+  --ck-inset: rgba(255, 255, 255, 1);
+  --ck-rule: rgba(19, 22, 42, 0.12);
+  --ck-drop: 0 26px 60px rgba(28, 32, 64, 0.16);
+  --ck-acc: color-mix(in srgb, var(--ck-accent) 84%, black);
+  --ck-cell-off: rgba(255, 255, 255, 0.62);
+  --ck-cell-off-bd: rgba(19, 22, 42, 0.13);
+  --ck-cell-on: color-mix(in srgb, var(--ck-accent) 82%, transparent);
+  --ck-cell-on-bd: color-mix(in srgb, var(--ck-accent) 92%, black);
+  --ck-flash: color-mix(in srgb, var(--ck-accent) 60%, transparent);
+  --ck-flash-2: color-mix(in srgb, var(--ck-accent) 38%, transparent);
+  --ck-input-bg: rgba(255, 255, 255, 0.66);
+  --ck-input-bd: rgba(19, 22, 42, 0.15);
+  --ck-hover: color-mix(in srgb, var(--ck-accent) 12%, transparent);
+  --ck-active: color-mix(in srgb, var(--ck-accent) 20%, transparent);
+}
+
+/* Dark theme — graphite ground, iris accent. Ported from screen 1a/1c. */
+:root[data-theme="dark"] {
+  --ck-page: #0f1015;
+  --ck-ground: #0f1015;
+  --ck-glow-1: color-mix(in srgb, var(--ck-accent) 26%, transparent);
+  --ck-glow-2: color-mix(in srgb, var(--ck-accent) 11%, transparent);
+  --ck-line: rgba(255, 255, 255, 0.028);
+  --ck-txt: #eef0f7;
+  --ck-txt-2: rgba(238, 240, 247, 0.62);
+  --ck-txt-3: rgba(238, 240, 247, 0.46);
+  --ck-txt-4: rgba(238, 240, 247, 0.34);
+  --ck-glass-1: rgba(255, 255, 255, 0.07);
+  --ck-glass-2: rgba(255, 255, 255, 0.025);
+  --ck-bd: rgba(255, 255, 255, 0.11);
+  --ck-inset: rgba(255, 255, 255, 0.09);
+  --ck-rule: rgba(255, 255, 255, 0.09);
+  --ck-drop: 0 26px 60px rgba(0, 0, 0, 0.5);
+  --ck-acc: color-mix(in srgb, var(--ck-accent) 62%, white);
+  --ck-cell-off: rgba(255, 255, 255, 0.04);
+  --ck-cell-off-bd: rgba(255, 255, 255, 0.11);
+  --ck-cell-on: color-mix(in srgb, var(--ck-accent) 84%, transparent);
+  --ck-cell-on-bd: color-mix(in srgb, var(--ck-accent) 68%, white);
+  --ck-flash: color-mix(in srgb, var(--ck-accent) 55%, white 25%);
+  --ck-flash-2: color-mix(in srgb, var(--ck-accent) 50%, transparent);
+  --ck-input-bg: rgba(255, 255, 255, 0.045);
+  --ck-input-bd: rgba(255, 255, 255, 0.15);
+  --ck-hover: color-mix(in srgb, var(--ck-accent) 20%, transparent);
+  --ck-active: color-mix(in srgb, var(--ck-accent) 30%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ck-page: #0f1015;
+    --ck-ground: #0f1015;
+    --ck-glow-1: color-mix(in srgb, var(--ck-accent) 26%, transparent);
+    --ck-glow-2: color-mix(in srgb, var(--ck-accent) 11%, transparent);
+    --ck-line: rgba(255, 255, 255, 0.028);
+    --ck-txt: #eef0f7;
+    --ck-txt-2: rgba(238, 240, 247, 0.62);
+    --ck-txt-3: rgba(238, 240, 247, 0.46);
+    --ck-txt-4: rgba(238, 240, 247, 0.34);
+    --ck-glass-1: rgba(255, 255, 255, 0.07);
+    --ck-glass-2: rgba(255, 255, 255, 0.025);
+    --ck-bd: rgba(255, 255, 255, 0.11);
+    --ck-inset: rgba(255, 255, 255, 0.09);
+    --ck-rule: rgba(255, 255, 255, 0.09);
+    --ck-drop: 0 26px 60px rgba(0, 0, 0, 0.5);
+    --ck-acc: color-mix(in srgb, var(--ck-accent) 62%, white);
+    --ck-cell-off: rgba(255, 255, 255, 0.04);
+    --ck-cell-off-bd: rgba(255, 255, 255, 0.11);
+    --ck-cell-on: color-mix(in srgb, var(--ck-accent) 84%, transparent);
+    --ck-cell-on-bd: color-mix(in srgb, var(--ck-accent) 68%, white);
+    --ck-flash: color-mix(in srgb, var(--ck-accent) 55%, white 25%);
+    --ck-flash-2: color-mix(in srgb, var(--ck-accent) 50%, transparent);
+    --ck-input-bg: rgba(255, 255, 255, 0.045);
+    --ck-input-bd: rgba(255, 255, 255, 0.15);
+    --ck-hover: color-mix(in srgb, var(--ck-accent) 20%, transparent);
+    --ck-active: color-mix(in srgb, var(--ck-accent) 30%, transparent);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  color: var(--ck-txt);
+  background: var(--ck-page);
+  font-family: var(--font-body);
+  line-height: 1.55;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+a {
+  color: var(--ck-acc);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ck-acc);
+  outline-offset: 2px;
+}
+
+@keyframes ckPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes ckSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

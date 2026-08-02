@@ -1,0 +1,119 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field label {
+  font-size: 12px;
+  color: var(--ck-txt-2);
+}
+
+.field-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.field-row label {
+  margin: 0;
+}
+
+.field input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ck-txt);
+  background: var(--ck-input-bg);
+  border: 1px solid var(--ck-input-bd);
+  border-radius: var(--radius-md);
+  caret-color: var(--ck-acc);
+  outline: none;
+}
+
+.field input:focus-visible {
+  border-color: var(--ck-acc);
+  outline: none;
+}
+
+.field-error {
+  font-size: 12px;
+  color: #dc2626;
+}
+
+.form-banner {
+  margin-bottom: 22px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.form-banner-error {
+  color: #dc2626;
+  background: color-mix(in srgb, #dc2626 12%, transparent);
+  border: 1px solid color-mix(in srgb, #dc2626 30%, transparent);
+}
+
+.form-banner-success {
+  color: var(--ck-acc);
+  background: var(--ck-hover);
+  border: 1px solid color-mix(in srgb, var(--ck-accent) 30%, transparent);
+}
+
+.btn-primary {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 6px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ck-acc);
+  background: transparent;
+  border: 1px solid var(--ck-accent);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--ck-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  background: var(--ck-active);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  width: 100%;
+  min-height: 44px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--ck-txt-2);
+  background: transparent;
+  border: 1px solid var(--ck-input-bd);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background: var(--ck-hover);
+}
+
+.spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ckSpin 0.7s linear infinite;
+}
