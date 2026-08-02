@@ -37,6 +37,12 @@ export class App {
       const PORT = process.env.PORT ?? 8000;
 
       const app = express();
+      // Most PaaS hosts (Render, Railway, Fly.io, …) put the app behind a
+      // single reverse proxy; without this, express-rate-limit and req.ip
+      // see the proxy's address for every request instead of the client's.
+      if (process.env.NODE_ENV === "production") {
+        app.set("trust proxy", 1);
+      }
       const server = http.createServer(app);
       this.#io = new Server({
         cors: {
@@ -48,7 +54,10 @@ export class App {
 
       await this.#attachRealtime();
 
-      app.use(helmet());
+      // Frontend and backend are separate origins, so the default
+      // same-origin Cross-Origin-Resource-Policy would block the frontend
+      // from reading API responses.
+      app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
       app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
       app.use(express.json());
       app.use(cookieParser());

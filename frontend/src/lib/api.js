@@ -1,3 +1,5 @@
+import { API_URL } from "./config";
+
 class ApiError extends Error {
   constructor(message, status) {
     super(message);
@@ -6,7 +8,7 @@ class ApiError extends Error {
 }
 
 async function raw(path, options = {}) {
-  const res = await fetch(path, {
+  const res = await fetch(`${API_URL}${path}`, {
     credentials: "include",
     headers: options.body ? { "Content-Type": "application/json" } : undefined,
     ...options,

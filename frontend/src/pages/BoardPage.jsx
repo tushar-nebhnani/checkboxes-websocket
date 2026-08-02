@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
+import { API_URL } from "../lib/config";
 import "./BoardPage.css";
 
 const TOTAL = 1008;
@@ -53,7 +54,7 @@ export function BoardPage() {
   };
 
   useEffect(() => {
-    const socket = io();
+    const socket = io(API_URL || undefined, { withCredentials: true });
     socketRef.current = socket;
 
     socket.on("connect", () => setConnected(true));
@@ -68,7 +69,7 @@ export function BoardPage() {
       flash(idx);
     });
 
-    fetch("/checkboxes")
+    fetch(`${API_URL}/checkboxes`, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (data?.checkboxes) setCheckboxes(data.checkboxes);

@@ -18,10 +18,13 @@ export class AuthUtils {
   static ACCESS_TOKEN_COOKIE = "access_token";
   static REFRESH_TOKEN_COOKIE = "refresh_token";
 
+  // Frontend and backend are deployed on different origins, so the auth
+  // cookies must be sent cross-site: SameSite=None requires Secure, which
+  // in turn requires HTTPS (true for any real deployment, not local dev).
   static #baseCookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "lax",
+    sameSite: isProduction ? "none" : "lax",
   };
 
   static signAccessToken(payload) {
