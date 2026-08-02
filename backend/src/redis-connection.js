@@ -1,10 +1,12 @@
 import Redis from "ioredis";
 
 function createRedisConnection() {
-  return new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
+  return new Redis(
+    process.env.REDIS_URI || {
+      host: "localhost",
+      port: 6379,
+    },
+  );
 }
 
 export class RedisConnection {
