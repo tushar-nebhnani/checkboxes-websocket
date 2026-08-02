@@ -29,9 +29,19 @@ export class AuthRoutes {
       AuthController.login,
     );
 
-    AuthRoutes.router.post("/refresh", RateLimiters.session, AuthController.refresh);
+    AuthRoutes.router.get("/health", (req, res) => res.json({ healthy: true }));
 
-    AuthRoutes.router.post("/logout", RateLimiters.session, AuthController.logout);
+    AuthRoutes.router.post(
+      "/refresh",
+      RateLimiters.session,
+      AuthController.refresh,
+    );
+
+    AuthRoutes.router.post(
+      "/logout",
+      RateLimiters.session,
+      AuthController.logout,
+    );
 
     AuthRoutes.router.get("/me", AuthMiddleware.requireAuth, AuthController.me);
 

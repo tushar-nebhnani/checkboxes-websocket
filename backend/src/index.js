@@ -18,6 +18,8 @@ const CHECKBOX_COUNT = 1008;
 const CHECKBOX_CHANGE_CHANNEL = "internal-server:checkbox:change";
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
 
+const state = { checkboxes: new Array(CHECKBOX_COUNT).fill(false) };
+
 function isValidCheckboxChange(data) {
   return (
     data != null &&
@@ -28,123 +30,115 @@ function isValidCheckboxChange(data) {
   );
 }
 
-export class App {
-  #state = { checkboxes: new Array(CHECKBOX_COUNT).fill(false) };
-  #io;
+async function attachRealtime(io) {
+  await RedisConnection.subscriber.subscribe(CHECKBOX_CHANGE_CHANNEL);
 
-  async start() {
+  RedisConnection.subscriber.on("message", (channel, message) => {
     try {
-      const PORT = process.env.PORT ?? 8000;
+      if (channel !== CHECKBOX_CHANGE_CHANNEL) return;
 
-      const app = express();
-      // Most PaaS hosts (Render, Railway, Fly.io, …) put the app behind a
-      // single reverse proxy; without this, express-rate-limit and req.ip
-      // see the proxy's address for every request instead of the client's.
-      if (process.env.NODE_ENV === "production") {
-        app.set("trust proxy", 1);
-      }
-      const server = http.createServer(app);
-      this.#io = new Server({
-        cors: {
-          origin: CLIENT_ORIGIN,
-          credentials: true,
-        },
-      });
-      this.#io.attach(server);
+      const data = JSON.parse(message);
+      if (!isValidCheckboxChange(data)) return;
 
-      await this.#attachRealtime();
-
-      // Frontend and backend are separate origins, so the default
-      // same-origin Cross-Origin-Resource-Policy would block the frontend
-      // from reading API responses.
-      app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-      app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
-      app.use(express.json());
-      app.use(cookieParser());
-
-      app.get("/health", (req, res) => res.json({ healthy: true }));
-
-      app.get("/checkboxes", AuthMiddleware.requireAuth, (req, res) => {
-        res.json({ checkboxes: this.#state.checkboxes });
-      });
-
-      app.use("/auth", AuthRoutes.router);
-
-      app.use((err, req, res, next) => {
-        ErrorHandler.handleControllerError(err, res, "App.errorMiddleware");
-      });
-
-      try {
-        await Database.ensureSchema();
-      } catch (err) {
-        console.error(
-          "[db] Failed to ensure schema — auth routes will not work until DATABASE_URL is configured correctly:",
-          err.message,
-        );
-      }
-
-      server.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
+      state.checkboxes[data.idx] = data.checked;
+      io.emit("server:checkbox:change", {
+        idx: data.idx,
+        checked: data.checked,
       });
     } catch (err) {
-      console.error("[App] Fatal startup error:", err);
-      process.exit(1);
+      console.error("[App] Failed to process checkbox change message:", err);
     }
-  }
+  });
 
-  async #attachRealtime() {
-    await RedisConnection.subscriber.subscribe(CHECKBOX_CHANGE_CHANNEL);
+  io.use((socket, next) => {
+    try {
+      const token = AuthUtils.getAccessTokenFromCookieHeader(
+        socket.handshake.headers.cookie,
+      );
+      if (!token) {
+        return next(new Error("Unauthorized"));
+      }
+      socket.userId = AuthUtils.verifyAccessToken(token).sub;
+      next();
+    } catch {
+      next(new Error("Unauthorized"));
+    }
+  });
 
-    RedisConnection.subscriber.on("message", (channel, message) => {
+  io.on("connection", (socket) => {
+    console.log("Socket connected", { id: socket.id, userId: socket.userId });
+
+    socket.on("client:checkbox:change", (data) => {
       try {
-        if (channel !== CHECKBOX_CHANGE_CHANNEL) return;
-
-        const data = JSON.parse(message);
         if (!isValidCheckboxChange(data)) return;
 
-        this.#state.checkboxes[data.idx] = data.checked;
-        this.#io.emit("server:checkbox:change", { idx: data.idx, checked: data.checked });
-      } catch (err) {
-        console.error("[App] Failed to process checkbox change message:", err);
-      }
-    });
-
-    // Only signed-in users may open a realtime connection — the frontend
-    // already gates the board behind login, this closes the gap where
-    // someone could bypass that gate by talking to the socket directly.
-    this.#io.use((socket, next) => {
-      try {
-        const token = AuthUtils.getAccessTokenFromCookieHeader(
-          socket.handshake.headers.cookie,
+        console.log(`[Socket:${socket.id}:client:checkbox:change]`, data);
+        RedisConnection.publisher.publish(
+          CHECKBOX_CHANGE_CHANNEL,
+          JSON.stringify({ idx: data.idx, checked: data.checked }),
         );
-        if (!token) {
-          return next(new Error("Unauthorized"));
-        }
-        socket.userId = AuthUtils.verifyAccessToken(token).sub;
-        next();
-      } catch {
-        next(new Error("Unauthorized"));
+      } catch (err) {
+        console.error(
+          `[Socket:${socket.id}] Failed to handle checkbox change:`,
+          err,
+        );
       }
     });
+  });
+}
 
-    this.#io.on("connection", (socket) => {
-      console.log("Socket connected", { id: socket.id, userId: socket.userId });
+async function start() {
+  try {
+    const PORT = process.env.PORT ?? 8000;
 
-      socket.on("client:checkbox:change", (data) => {
-        try {
-          if (!isValidCheckboxChange(data)) return;
-
-          console.log(`[Socket:${socket.id}:client:checkbox:change]`, data);
-          RedisConnection.publisher.publish(
-            CHECKBOX_CHANGE_CHANNEL,
-            JSON.stringify({ idx: data.idx, checked: data.checked }),
-          );
-        } catch (err) {
-          console.error(`[Socket:${socket.id}] Failed to handle checkbox change:`, err);
-        }
-      });
+    const app = express();
+    if (process.env.NODE_ENV === "production") {
+      app.set("trust proxy", 1);
+    }
+    const server = http.createServer(app);
+    const io = new Server({
+      cors: {
+        origin: CLIENT_ORIGIN,
+        credentials: true,
+      },
     });
+    io.attach(server);
+
+    await attachRealtime(io);
+
+    app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+    app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
+    app.use(express.json());
+    app.use(cookieParser());
+
+    app.get("/health", (req, res) => res.json({ healthy: true }));
+
+    app.get("/checkboxes", AuthMiddleware.requireAuth, (req, res) => {
+      res.json({ checkboxes: state.checkboxes });
+    });
+
+    app.use("/auth", AuthRoutes.router);
+
+    app.use((err, req, res, next) => {
+      ErrorHandler.handleControllerError(err, res, "App.errorMiddleware");
+    });
+
+    try {
+      await Database.ensureSchema();
+    } catch (err) {
+      console.error(
+        "[db] Failed to ensure schema — auth routes will not work until DATABASE_URL is configured correctly:",
+        err.message,
+      );
+    }
+
+    server.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("[App] Fatal startup error:", err);
+    process.exit(1);
   }
 }
 
-new App().start();
+start();
