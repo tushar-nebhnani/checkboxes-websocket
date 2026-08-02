@@ -1,10 +1,12 @@
+import { BoardBackdrop } from "./BoardBackdrop";
 import { ThemeToggle } from "./ThemeToggle";
 import "./AuthShell.css";
 
 export function AuthShell({ children }) {
   return (
     <div className="auth-shell">
-      <div className="auth-shell-grid" />
+      <BoardBackdrop />
+      <div className="auth-shell-veil" />
       <div className="auth-shell-toggle">
         <ThemeToggle />
       </div>

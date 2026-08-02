@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AuthShell } from "../components/AuthShell";
 import { Brand } from "../components/Brand";
+import { PasswordVisibilityToggle } from "../components/PasswordVisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, api } from "../lib/api";
 import "../styles/form.css";
@@ -13,6 +14,7 @@ export function AuthPage() {
   const [mode, setMode] = useState(MODES.SIGN_IN);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -95,16 +97,22 @@ export function AuthPage() {
                   </a>
                 )}
               </div>
-              <input
-                id="password"
-                type="password"
-                placeholder="••••••••••"
-                autoComplete={mode === MODES.SIGN_UP ? "new-password" : "current-password"}
-                minLength={mode === MODES.SIGN_UP ? 8 : undefined}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="field-input-wrap">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••••"
+                  autoComplete={mode === MODES.SIGN_UP ? "new-password" : "current-password"}
+                  minLength={mode === MODES.SIGN_UP ? 8 : undefined}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <PasswordVisibilityToggle
+                  visible={showPassword}
+                  onToggle={() => setShowPassword((v) => !v)}
+                />
+              </div>
             </div>
           )}
 

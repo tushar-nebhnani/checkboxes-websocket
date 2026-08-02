@@ -1,0 +1,13 @@
+.board-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: scale(1.06);
+  filter: blur(5px) saturate(115%);
+  opacity: 0.95;
+}
+
+.board-backdrop .board {
+  min-height: 100%;
+}
